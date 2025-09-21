@@ -12,5 +12,4 @@ numpy
 matplotlib
 easyocr
 opencv-python
-azure-ai-documentintelligence
 azure-core

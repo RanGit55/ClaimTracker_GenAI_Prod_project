@@ -11,7 +11,7 @@ from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from langchain_community.vectorstores import FAISS
-from azure.ai.documentintelligence import DocumentAnalysisClient
+from azure.ai.documentintelligence.document_analysis_client import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity

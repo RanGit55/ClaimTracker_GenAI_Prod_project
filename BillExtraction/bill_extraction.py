@@ -1,4 +1,4 @@
-from azure.ai.documentintelligence import DocumentAnalysisClient
+from azure.ai.documentintelligence.document_analysis_client import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from openai import AzureOpenAI
 import os
@@ -77,5 +77,5 @@ if __name__ == '__main__':
         bill_info = get_pdf_data(bill_path)
         invoice_details = get_invoice_info_from_llm(bill_info)
 
-        print(f"Disease: {invoice_details["disease"]}")
-        print(f"Expense: {invoice_details["expense"]}")
+    print(f"Disease: {invoice_details['disease']}")
+    print(f"Expense: {invoice_details['expense']}")
