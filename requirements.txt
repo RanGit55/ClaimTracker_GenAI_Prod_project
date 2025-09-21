@@ -1,0 +1,14 @@
+langchain_community
+langchain_openai
+flask
+PyPDF2
+scikit-learn
+openai
+azure-storage-blob
+python-dotenv
+tiktoken
+gunicorn
+numpy
+matplotlib
+easyocr
+opencv-python
