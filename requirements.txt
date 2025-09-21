@@ -1,7 +1,6 @@
 langchain_community
 langchain_openai
 flask
-PyPDF2
 scikit-learn
 openai
 azure-storage-blob
@@ -12,3 +11,5 @@ numpy
 matplotlib
 easyocr
 opencv-python
+azure-ai-documentintelligence
+azure-core

@@ -4,14 +4,15 @@ from flask import Flask, render_template, request
 from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 import io
 from azure.storage.blob import BlobServiceClient
-import openai
-from langchain_openai import ChatOpenAI
+
+
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+
 from langchain_community.vectorstores import FAISS
-from PyPDF2 import PdfReader
+from azure.ai.documentintelligence import DocumentAnalysisClient
+from azure.core.credentials import AzureKeyCredential
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from langchain_community.document_loaders import DirectoryLoader
@@ -24,7 +25,7 @@ from langchain_openai import AzureOpenAIEmbeddings
 
 api_key= os.getenv("AZURE_OPENAI_API_KEY")
 endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME","gpt-4.1-mini")
+deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME","gpt-4.1-nano")
 embbedings_deployment_name = os.getenv("AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME","text-embedding-3-small")
 BLOB_CONNECTION_STRING = os.getenv("BLOB_CONNECTION_STRING")
 CONTAINER_NAME = os.getenv("CONTAINER_NAME","bupa-docs")
@@ -120,11 +121,22 @@ def get_general_exclusion_context():
 def get_file_content(file):
     text = ""
     if file.filename.endswith(".pdf"):
-        pdf = PdfReader(file)
-        for page_num in range(len(pdf.pages)):
-            page = pdf.pages[page_num]
-            text += page.extract_text()
+        # Use Azure Document Intelligence to extract text
+        azure_docintelligence_key = os.getenv("AZURE_DOCINTELLIGENCE_KEY")
+        azure_docintelligence_endpoint = os.getenv("AZURE_DOCINTELLIGENCE_ENDPOINT")
+        if not azure_docintelligence_key or not azure_docintelligence_endpoint:
+            raise ValueError("Azure Document Intelligence credentials not set in environment variables.")
 
+        client = DocumentAnalysisClient(
+            endpoint=azure_docintelligence_endpoint,
+            credential=AzureKeyCredential(azure_docintelligence_key)
+        )
+        # file.stream is a file-like object for Flask uploads
+        poller = client.begin_analyze_document("prebuilt-layout", document=file.stream)
+        result = poller.result()
+        for page in result.pages:
+            for line in page.lines:
+                text += line.content + "\n"
     return text
 
 def get_bill_info(data):

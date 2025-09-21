@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -40,6 +40,18 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+
+      - name: 'Export environment variables for Azure Web App'
+        run: |
+          echo "AZURE_OPENAI_API_KEY=${{ secrets.AZURE_OPENAI_API_KEY }}" >> $GITHUB_ENV
+          echo "AZURE_OPENAI_ENDPOINT=${{ secrets.AZURE_OPENAI_ENDPOINT }}" >> $GITHUB_ENV
+          echo "AZURE_OPENAI_DEPLOYMENT_NAME=${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}" >> $GITHUB_ENV
+          echo "AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME=${{ secrets.AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME }}" >> $GITHUB_ENV
+          echo "AZURE_DOCINTELLIGENCE_KEY=${{ secrets.AZURE_DOCINTELLIGENCE_KEY }}" >> $GITHUB_ENV
+          echo "AZURE_DOCINTELLIGENCE_ENDPOINT=${{ secrets.AZURE_DOCINTELLIGENCE_ENDPOINT }}" >> $GITHUB_ENV
+          echo "BLOB_CONNECTION_STRING=${{ secrets.BLOB_CONNECTION_STRING }}" >> $GITHUB_ENV
+          echo "CONTAINER_NAME=${{ secrets.CONTAINER_NAME }}" >> $GITHUB_ENV
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         with:
@@ -48,3 +60,6 @@ jobs:
 
       - name: 'Logout from Azure'
         run: az logout
+
+
+        

@@ -1,30 +1,48 @@
-from PyPDF2 import PdfReader
-from openai import OpenAI
-import yaml
-import json
+from azure.ai.documentintelligence import DocumentAnalysisClient
+from azure.core.credentials import AzureKeyCredential
+from openai import AzureOpenAI
 import os
+import json
 
-CONFIG_PATH = r"config.yaml"
 
-with open(CONFIG_PATH) as file:
-    data = yaml.load(file, Loader=yaml.FullLoader)
-    api_key = data['OPENAI_API_KEY']
+# Read all keys from environment variables
+api_key = os.getenv('AZURE_OPENAI_API_KEY')
+azure_docintelligence_key = os.getenv('AZURE_DOCINTELLIGENCE_KEY')
+azure_docintelligence_endpoint = os.getenv('AZURE_DOCINTELLIGENCE_ENDPOINT')
+endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME","gpt-4.1-nano")
 
 def get_pdf_data(fpath):
+    """
+    Extract text from PDF using Azure Document Intelligence (Layout model).
+    """
+    if not azure_docintelligence_key or not azure_docintelligence_endpoint:
+        raise ValueError("Azure Document Intelligence credentials not set in config.yaml")
+
+    client = DocumentAnalysisClient(
+        endpoint=azure_docintelligence_endpoint,
+        credential=AzureKeyCredential(azure_docintelligence_key)
+    )
+
+    with open(fpath, "rb") as f:
+        poller = client.begin_analyze_document("prebuilt-layout", document=f)
+        result = poller.result()
+
     text = ""
-    pdf = PdfReader(fpath)
-    for page_num in range(len(pdf.pages)):
-        page = pdf.pages[page_num]
-        page_text = page.extract_text()
-        text += page_text
+    for page in result.pages:
+        for line in page.lines:
+            text += line.content + "\n"
     return text
 
 def get_llm():
-    openai_client = OpenAI(
-        api_key=api_key
+      # Define the AzureOpenAI client
+    client = AzureOpenAI(
+        api_key=api_key,
+        azure_endpoint=endpoint,
+        api_version="2024-12-01-preview"
     )
 
-    return openai_client
+    return client
 
 def get_invoice_info_from_llm(data):
     llm = get_llm()
@@ -39,7 +57,7 @@ def get_invoice_info_from_llm(data):
     messages.append({"role": "user", "content": user_content})
 
     response = llm.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=deployment_name,
                 messages=messages,
                 temperature=0.4,
                 max_tokens=2500)
